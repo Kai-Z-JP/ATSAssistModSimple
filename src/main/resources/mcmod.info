@@ -1,0 +1,20 @@
+[
+  {
+    "modid": "atsassistmod",
+    "name": "ATSAssistMod",
+    "description": "ATSAssistMod",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "Kaiz_JP"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": [
+      "RTM"
+    ]
+  }
+]
