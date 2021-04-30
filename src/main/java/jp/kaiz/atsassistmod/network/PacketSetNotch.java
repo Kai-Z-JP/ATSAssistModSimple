@@ -1,44 +1,37 @@
 package jp.kaiz.atsassistmod.network;
 
-import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import jp.ngt.rtm.entity.train.EntityTrainBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
 public class PacketSetNotch implements IMessage, IMessageHandler<PacketSetNotch, IMessage> {
-    private String playerName;
     private int entityID;
     private byte notch;
     private int type;
-    public static final int setNotchByPlayer = 0;
-    public static final int setNotchByEntity = 1;
 
     public PacketSetNotch() {
     }
 
-    public PacketSetNotch(EntityPlayer player, byte notch) {
-        this.playerName = player.getCommandSenderName();
+    public PacketSetNotch(byte notch) {
         this.notch = notch;
-        this.type = setNotchByPlayer;
+        this.type = PacketCause.PLAYER.id;
     }
 
-    public PacketSetNotch(EntityTrainBase entity, byte notch) {
-        this.entityID = entity.getEntityId();
+    public PacketSetNotch(EntityTrainBase train, byte notch) {
+        this.entityID = train.getEntityId();
         this.notch = notch;
-        this.type = setNotchByEntity;
+        this.type = PacketCause.ENTITY_ID.id;
     }
 
     @Override
     public void toBytes(ByteBuf buffer) {
         buffer.writeInt(this.type);
-        if (this.type == setNotchByPlayer) {
-            ByteBufUtils.writeUTF8String(buffer, this.playerName);
+        if (this.type == PacketCause.PLAYER.id) {
             buffer.writeByte(this.notch);
-        } else if (this.type == setNotchByEntity) {
+        } else if (this.type == PacketCause.ENTITY_ID.id) {
             buffer.writeInt(this.entityID);
             buffer.writeByte(this.notch);
         }
@@ -47,10 +40,9 @@ public class PacketSetNotch implements IMessage, IMessageHandler<PacketSetNotch,
     @Override
     public void fromBytes(ByteBuf buffer) {
         this.type = buffer.readInt();
-        if (this.type == setNotchByPlayer) {
-            this.playerName = ByteBufUtils.readUTF8String(buffer);
+        if (this.type == PacketCause.PLAYER.id) {
             this.notch = buffer.readByte();
-        } else if (this.type == setNotchByEntity) {
+        } else if (this.type == PacketCause.ENTITY_ID.id) {
             this.entityID = buffer.readInt();
             this.notch = buffer.readByte();
         }
@@ -59,10 +51,9 @@ public class PacketSetNotch implements IMessage, IMessageHandler<PacketSetNotch,
     @Override
     public IMessage onMessage(PacketSetNotch message, MessageContext ctx) {
         World world = ctx.getServerHandler().playerEntity.worldObj;
-        if (message.type == setNotchByPlayer) {
-            EntityPlayer player = world.getPlayerEntityByName(message.playerName);
-            ATSAssistAPIHandlerServer.INSTANCE.onUseAPI(player, message.notch);
-        } else if (message.type == setNotchByEntity) {
+        if (message.type == PacketCause.PLAYER.id) {
+            ATSAssistAPIHandlerServer.INSTANCE.onUseAPI(ctx.getServerHandler().playerEntity, message.notch);
+        } else if (message.type == PacketCause.ENTITY_ID.id) {
             EntityTrainBase entity = (EntityTrainBase) world.getEntityByID(message.entityID);
             ATSAssistAPIHandlerServer.INSTANCE.onUseAPI(entity, message.notch);
         }
